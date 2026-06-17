@@ -33,8 +33,9 @@
   .qcard .meta{ color:var(--sub); font-size:12px; margin-top:8px; }
   .genre-label{ color:var(--primary); font-weight:700; font-size:13px; margin-bottom:6px; }
   .q-big{ font-size:19px; line-height:1.5; margin:0; }
-  textarea{ width:100%; min-height:130px; border:1px solid var(--border); border-radius:12px;
+  textarea{ width:100%; min-height:120px; border:1px solid var(--border); border-radius:12px;
     padding:14px; font-size:16px; font-family:inherit; resize:vertical; margin-top:8px; color:var(--text); }
+  textarea.short{ min-height:80px; }
   label{ font-weight:700; display:block; margin-top:18px; }
   .btn{ width:100%; background:var(--primary); color:#fff; border:none; border-radius:12px;
     padding:15px; font-size:16px; font-weight:700; cursor:pointer; margin-top:16px; }
@@ -59,17 +60,27 @@
   .empty{ text-align:center; color:var(--sub); margin-top:60px; line-height:1.7; }
   .pill{ display:inline-block; background:#EAF1FA; color:var(--primary); border-radius:999px;
     padding:3px 10px; font-size:12px; font-weight:700; }
-  .hist .body{ font-weight:600; margin:6px 0; line-height:1.4; }
-  .hist .ans{ color:var(--sub); font-size:13px; }
   .banner{ background:#FFF6E5; border:1px solid #F2D99B; border-radius:12px; padding:13px 14px;
     margin-bottom:14px; font-size:13px; line-height:1.6; color:#7a5b13; cursor:pointer; }
-  .banner b{ color:#7a5b13; }
   ol.guide{ margin:10px 0 4px; padding-left:20px; }
   ol.guide li{ margin-bottom:8px; line-height:1.6; }
   .step{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px;
     border-radius:50%; background:var(--primary); color:#fff; font-size:13px; font-weight:700; margin-right:8px; }
   code{ background:#EEF2F7; padding:1px 6px; border-radius:5px; font-size:13px; }
   .saved-msg{ margin-top:10px; color:var(--good); font-weight:600; min-height:18px; }
+  .score-big{ text-align:center; }
+  .score-big .num{ font-size:46px; font-weight:800; color:var(--primary); line-height:1; }
+  .score-big .num small{ font-size:20px; color:var(--sub); font-weight:700; }
+  .score-big .cmt{ color:var(--text); margin-top:8px; line-height:1.6; font-size:14px; }
+  .dim{ margin-bottom:13px; }
+  .dim-top{ display:flex; justify-content:space-between; font-size:13px; font-weight:700; }
+  .dim-top b{ color:var(--primary); }
+  .bar{ height:8px; background:#EAEFF5; border-radius:6px; margin:5px 0; overflow:hidden; }
+  .bar-fill{ height:100%; background:var(--primary); border-radius:6px; }
+  .dim-c{ font-size:12px; color:var(--sub); line-height:1.5; }
+  .histcard{ cursor:pointer; }
+  .backlink{ color:var(--primary); font-weight:600; cursor:pointer; display:inline-block; margin-bottom:8px; font-size:14px; }
+  .ftag{ display:inline-block; background:#EFE7FB; color:#6B3FA0; border-radius:999px; padding:2px 9px; font-size:11px; font-weight:700; margin-bottom:6px; }
 </style>
 </head>
 <body>
@@ -101,6 +112,16 @@ const QUESTIONS = [
 ];
 const GENRES = ['マーケティング','IT・SIer','経営','心理学','社会','身近な謎'];
 const PERSPECTIVES = ['マーケティング','顧客','技術','法規制','コスト','心理','競争戦略','社会'];
+const DIMENSIONS = [
+  ['問題定義力','何が本当に問うべき論点かを捉えられているか'],
+  ['論理性','主張と根拠の筋が通り、因果関係が明確か'],
+  ['多角性','一つの視点に偏らず複数の切り口から考えているか'],
+  ['具体性','抽象論で終わらず具体例やメカニズムに踏み込めているか'],
+  ['問題分解力','要素に分けて整理（MECE）できているか'],
+  ['仮説を立てる力','「たぶんこうだ」と仮説を立てて検証する姿勢があるか'],
+  ['数字感覚','規模感や定量的な視点を持てているか'],
+  ['創造力','ありきたりでない独自の発想があるか'],
+];
 
 const LS_KEY='elifoq.key', LS_HIST='elifoq.history';
 const getKey=()=>localStorage.getItem(LS_KEY)||'';
@@ -108,9 +129,9 @@ const setKey=v=>localStorage.setItem(LS_KEY,v);
 const getHist=()=>{ try{ return JSON.parse(localStorage.getItem(LS_HIST)||'[]'); }catch{ return []; } };
 const pushHist=e=>{ const h=getHist(); h.unshift(e); localStorage.setItem(LS_HIST,JSON.stringify(h.slice(0,200))); };
 
-let state={ screen:'home', genre:GENRES[0], qid:null, answer:'' };
+let state={ screen:'home', genre:GENRES[0], qid:null, answer:'', current:null, histId:null };
 const main=document.getElementById('main');
-const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const esc=s=>(s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
 function go(screen,extra={}){ state={...state,screen,...extra}; render(); window.scrollTo(0,0); main.scrollTop=0; }
 
@@ -118,15 +139,20 @@ function render(){
   renderTabbar();
   if(state.screen==='home') return renderHome();
   if(state.screen==='answer') return renderAnswer();
-  if(state.screen==='feedback') return renderFeedback();
+  if(state.screen==='feedback') return showFeedback();
   if(state.screen==='history') return renderHistory();
+  if(state.screen==='histdetail') return renderHistoryDetail();
   if(state.screen==='settings') return renderSettings();
 }
 
 function renderTabbar(){
   const tabs=[['home','🏠','ホーム'],['history','📜','履歴'],['settings','⚙️','設定']];
-  document.getElementById('tabbar').innerHTML=tabs.map(([s,ic,l])=>
-    `<button class="${state.screen===s||(s==='home'&&['answer','feedback'].includes(state.screen))?'active':''}" onclick="go('${s}')"><span class="ic">${ic}</span>${l}</button>`).join('');
+  const homeActive=['home','answer','feedback'].includes(state.screen);
+  const histActive=['history','histdetail'].includes(state.screen);
+  document.getElementById('tabbar').innerHTML=tabs.map(([s,ic,l])=>{
+    const act=(s==='home'&&homeActive)||(s==='history'&&histActive)||s===state.screen;
+    return `<button class="${act?'active':''}" onclick="go('${s}')"><span class="ic">${ic}</span>${l}</button>`;
+  }).join('');
 }
 
 function renderHome(){
@@ -151,68 +177,142 @@ function renderAnswer(){
     <label>あなたの考え</label>
     <textarea id="ans" placeholder="まずは自分なりの仮説を書いてみよう">${esc(state.answer)}</textarea>
     <p class="sub">目安: 30〜120字。短くてもOK。</p>
-    <button class="btn" id="submit" disabled onclick="submitAnswer()">AIに視点を広げてもらう</button>
+    <button class="btn" id="submit" disabled onclick="submitAnswer()">AIに採点＆視点を広げてもらう</button>
   `;
   const ta=document.getElementById('ans'), btn=document.getElementById('submit');
   const upd=()=>{ state.answer=ta.value; btn.disabled=ta.value.trim().length<5; };
   ta.addEventListener('input',upd); upd();
 }
 
+function spinner(msg){ main.innerHTML=`<div class="spinner"></div><p class="center">${esc(msg)}</p>`; }
+
 async function submitAnswer(){
   const q=QUESTIONS.find(x=>x.id===state.qid);
-  go('feedback');
-  main.innerHTML=`<div class="spinner"></div><p class="center">AIが視点を広げています…</p>`;
+  go('feedback'); spinner('AIが採点して視点を広げています…');
   const key=getKey();
   if(!key){ main.innerHTML=`<p class="err">Gemini APIキーが未設定です。<br>「設定」から登録してください（手順を案内しています）。</p>
     <button class="btn ghost" onclick="go('settings')">設定を開く</button>`; return; }
   try{
-    const fb=await callGemini(key,q,state.answer);
-    pushHist({id:q.id+'-'+Date.now(),genre:q.genre,body:q.body,answer:state.answer,fb,at:Date.now()});
-    renderFeedbackResult(q,fb);
-  }catch(e){
-    main.innerHTML=`<p class="err">${esc(e.message)}</p>
-      <button class="btn ghost" onclick="go('home')">ホームに戻る</button>`;
-  }
+    const fb=await callGemini(key,{question:q.body,genre:q.genre,answer:state.answer,prior:null});
+    state.current={genre:q.genre,question:q.body,answer:state.answer,fb};
+    saveRound('main');
+    showFeedback();
+  }catch(e){ main.innerHTML=`<p class="err">${esc(e.message)}</p>
+    <button class="btn ghost" onclick="go('home')">ホームに戻る</button>`; }
 }
 
-function renderFeedback(){ /* 表示はsubmitAnswer内で行う */ }
+async function submitFollowup(){
+  const cur=state.current; const ta=document.getElementById('fans'); const ans=ta.value.trim();
+  if(ans.length<5) return;
+  const fq=cur.fb.follow_up_question;
+  go('feedback'); spinner('発展回答を採点しています…');
+  const key=getKey();
+  try{
+    const prior=`【背景】元の問題: ${cur.question}\nそれに対するあなたの回答: ${cur.answer}\n（以下は、その発展質問「${fq}」へのあなたの回答です。発展質問に答えられているかも踏まえて評価してください）`;
+    const fb=await callGemini(key,{question:fq,genre:cur.genre,answer:ans,prior});
+    state.current={genre:cur.genre,question:fq,answer:ans,fb};
+    saveRound('followup');
+    showFeedback();
+  }catch(e){ main.innerHTML=`<p class="err">${esc(e.message)}</p>
+    <button class="btn ghost" onclick="go('home')">ホームに戻る</button>`; }
+}
 
-function renderFeedbackResult(q,fb){
+function saveRound(kind){
+  const c=state.current;
+  pushHist({ id:'h-'+Date.now()+'-'+Math.random().toString(36).slice(2,6),
+    kind, genre:c.genre, question:c.question, answer:c.answer, fb:c.fb, at:Date.now() });
+}
+
+function scoreBar(name,score,comment){
+  const s=Math.max(0,Math.min(10,Number(score)||0));
+  return `<div class="dim"><div class="dim-top"><span>${esc(name)}</span><b>${s}/10</b></div>
+    <div class="bar"><div class="bar-fill" style="width:${s*10}%"></div></div>
+    ${comment?`<div class="dim-c">${esc(comment)}</div>`:''}</div>`;
+}
+
+function feedbackHTML(c, withFollowup){
+  const fb=c.fb;
+  const scores=(fb.scores||[]).map(s=>scoreBar(s.name,s.score,s.comment)).join('');
   const persp=(fb.other_perspectives||[]).map(p=>
     `<div class="card"><div class="pname">${esc(p.name)}</div><div class="phint">${esc(p.hint)}</div></div>`).join('');
-  main.innerHTML=`
-    <div class="card"><span class="pill">使った視点: ${esc(fb.used_perspective||'-')}</span>
-      <p class="sub" style="margin-top:8px">あなたの回答: ${esc(state.answer)}</p></div>
+  const fu = withFollowup ? `
+    <div class="card">
+      <p class="block-title" style="color:var(--primary)">❓ 発展質問</p>
+      <div>${esc(fb.follow_up_question)}</div>
+      <textarea id="fans" class="short" placeholder="この問いにも答えてみよう（連続で深められます）"></textarea>
+      <button class="btn" id="fbtn" disabled onclick="submitFollowup()">この質問に答えて、さらに深める</button>
+    </div>
+    <button class="btn ghost" onclick="go('home')">別の問題に挑戦する</button>
+  ` : `
+    <div class="card"><p class="block-title" style="color:var(--primary)">❓ 発展質問</p><div>${esc(fb.follow_up_question)}</div></div>
+  `;
+  return `
+    <div class="card score-big">
+      <div class="num">${esc(fb.overall_score)}<small> / 10</small></div>
+      <div class="cmt">${esc(fb.overall_comment)}</div>
+    </div>
+    <div class="card">
+      <p class="block-title">📊 項目別の評価（思考の質）</p>
+      ${scores}
+    </div>
     <div class="card"><p class="block-title" style="color:var(--good)">👍 良い点</p><div>${esc(fb.good_point)}</div></div>
     <div class="card"><p class="block-title" style="color:var(--warn)">🔍 見落としやすい点</p><div>${esc(fb.blind_spot)}</div></div>
     <h2 style="font-size:16px;margin:8px 0">🧭 別の視点も考えてみよう</h2>
     ${persp}
-    <div class="card"><p class="block-title" style="color:var(--primary)">❓ 発展質問</p><div>${esc(fb.follow_up_question)}</div></div>
-    <button class="btn" onclick="go('home')">別の問題に挑戦する</button>
+    <div class="card"><p class="block-title" style="color:var(--primary-d)">📝 模範回答例</p><div style="line-height:1.7">${esc(fb.model_answer)}</div></div>
+    ${fu}
   `;
 }
 
-async function callGemini(key,q,answer){
+function showFeedback(){
+  const c=state.current;
+  main.innerHTML=`
+    <div class="card"><div class="genre-label">${esc(c.genre)}</div>
+      <p class="q-big" style="font-size:16px">${esc(c.question)}</p>
+      <p class="sub" style="margin-top:8px">あなたの回答: ${esc(c.answer)}</p></div>
+    ${feedbackHTML(c,true)}
+  `;
+  wireFollowup();
+}
+
+function wireFollowup(){
+  const ta=document.getElementById('fans'), btn=document.getElementById('fbtn');
+  if(!ta||!btn) return;
+  const upd=()=>{ btn.disabled=ta.value.trim().length<5; };
+  ta.addEventListener('input',upd); upd();
+}
+
+async function callGemini(key,p){
   const sys=[
-    'あなたは思考力を鍛えるコーチです。',
-    'ユーザーの答えに対して正解・不正解の判定は絶対にしないでください。',
-    'まず良い視点を1つ認め、見落としを示し、別の視点を2〜4個提示し、最後に発展質問を1つ投げかけます。',
-    '相手を否定せず、考える切り口を増やす前向きなトーンで。日本語・敬体で簡潔に。',
-    'used_perspective は次から1つ選ぶ: '+PERSPECTIVES.join(' / '),
+    'あなたは思考力を鍛えるコーチ兼、ケース面接の評価者です。',
+    '目的は「正解を当てさせること」ではなく、回答者の思考の質を評価し、考え方の幅を広げることです。',
+    '次の8つの観点それぞれを0〜10点で採点し、短い講評を付けてください（厳しすぎず、根拠を示して建設的に）:',
+    DIMENSIONS.map(d=>`- ${d[0]}: ${d[1]}`).join('\n'),
+    'overall_score は総合点(0〜10の整数)。良い点→見落とし→別の視点(2〜4個)→模範回答例→発展質問、の順で内容も返します。',
+    'model_answer には、その問題に対する筋の良い回答例を3〜5文で具体的に示してください。',
+    'follow_up_question は、回答者の思考をさらに一段深めるための問いを1つ。',
+    '全体に日本語・敬体で簡潔に。出力は指定JSONのみ。',
   ].join('\n');
+  const dimEnum=DIMENSIONS.map(d=>d[0]);
   const schema={ type:'object', properties:{
+    overall_score:{type:'integer'},
+    overall_comment:{type:'string'},
+    scores:{type:'array',items:{type:'object',properties:{
+      name:{type:'string',enum:dimEnum}, score:{type:'integer'}, comment:{type:'string'}
+    },required:['name','score','comment']}},
     good_point:{type:'string'}, blind_spot:{type:'string'},
     other_perspectives:{type:'array',items:{type:'object',properties:{name:{type:'string'},hint:{type:'string'}},required:['name','hint']}},
-    follow_up_question:{type:'string'}, used_perspective:{type:'string'} },
-    required:['good_point','blind_spot','other_perspectives','follow_up_question','used_perspective'] };
-  // キーはURLではなくヘッダー(x-goog-api-key)で送る（AIza / AQ どちらの形式にも対応）
+    model_answer:{type:'string'},
+    follow_up_question:{type:'string'} },
+    required:['overall_score','overall_comment','scores','good_point','blind_spot','other_perspectives','model_answer','follow_up_question'] };
+  const userText=(p.prior?p.prior+'\n':'')+`問題: ${p.question}\nジャンル: ${p.genre}\nユーザーの回答: ${p.answer}`;
   const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   const res=await fetch(url,{ method:'POST',
     headers:{'Content-Type':'application/json','x-goog-api-key':key},
     body:JSON.stringify({
       systemInstruction:{parts:[{text:sys}]},
-      contents:[{role:'user',parts:[{text:`問題: ${q.body}\nジャンル: ${q.genre}\nユーザーの回答: ${answer}`}]}],
-      generationConfig:{temperature:0.7,responseMimeType:'application/json',responseSchema:schema}
+      contents:[{role:'user',parts:[{text:userText}]}],
+      generationConfig:{temperature:0.6,responseMimeType:'application/json',responseSchema:schema}
     })});
   if(!res.ok){
     if(res.status===400||res.status===401||res.status===403) throw new Error('APIキーが無効か権限がありません。設定でキーを確認してください。');
@@ -228,13 +328,27 @@ async function callGemini(key,q,answer){
 function renderHistory(){
   const h=getHist();
   if(!h.length){ main.innerHTML=`<p class="empty">まだ回答がありません。<br>ホームから問題に挑戦してみましょう。</p>`; return; }
-  main.innerHTML=`<h2>思考履歴</h2>`+h.map(e=>`
-    <div class="card hist">
-      <span class="pill">${esc(e.genre)}・${new Date(e.at).toLocaleDateString('ja-JP')}</span>
-      <div class="body">${esc(e.body)}</div>
-      <div class="ans">あなた: ${esc(e.answer)}</div>
-      <div class="ans" style="margin-top:6px">視点: ${esc(e.fb.used_perspective)} / ${esc(e.fb.good_point)}</div>
+  main.innerHTML=`<h2>思考履歴</h2><p class="sub">タップすると採点・フィードバックを全部見られます。</p>`+
+    h.map(e=>`<div class="card histcard" onclick="go('histdetail',{histId:'${e.id}'})">
+      ${e.kind==='followup'?'<span class="ftag">↳ 発展質問</span><br>':''}
+      <span class="pill">${esc(e.genre)}・${new Date(e.at).toLocaleDateString('ja-JP')}・${esc(e.fb.overall_score)}/10</span>
+      <div style="font-weight:600;margin:6px 0;line-height:1.4">${esc(e.question)}</div>
+      <div class="sub">あなた: ${esc(e.answer)}</div>
     </div>`).join('');
+}
+
+function renderHistoryDetail(){
+  const e=getHist().find(x=>x.id===state.histId);
+  if(!e){ go('history'); return; }
+  main.innerHTML=`
+    <span class="backlink" onclick="go('history')">← 履歴に戻る</span>
+    <div class="card"><div class="genre-label">${esc(e.genre)}・${new Date(e.at).toLocaleString('ja-JP')}</div>
+      ${e.kind==='followup'?'<span class="ftag">↳ 発展質問への回答</span>':''}
+      <p class="q-big" style="font-size:16px">${esc(e.question)}</p>
+      <p class="sub" style="margin-top:8px">あなたの回答: ${esc(e.answer)}</p></div>
+    ${feedbackHTML({genre:e.genre,question:e.question,answer:e.answer,fb:e.fb}, false)}
+    <button class="btn ghost" onclick="go('history')">履歴に戻る</button>
+  `;
 }
 
 function renderSettings(){
