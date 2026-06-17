@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Elifoq — 日常の「なぜ？」を思考力に変える</title>
+<style>
+  :root{ --primary:#2E6DB4; --primary-d:#1F4E84; --bg:#F6F8FB; --card:#fff;
+    --text:#1F2430; --sub:#667085; --border:#E3E8EF; --good:#2E9E5B; --warn:#C77700; --danger:#B00020; }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body{ margin:0; font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,system-ui,sans-serif;
+    background:var(--bg); color:var(--text); }
+  .app{ max-width:480px; margin:0 auto; min-height:100vh; background:var(--bg);
+    display:flex; flex-direction:column; box-shadow:0 0 40px rgba(0,0,0,.05); }
+  header{ background:var(--primary); color:#fff; padding:14px 16px; display:flex;
+    align-items:center; justify-content:space-between; position:sticky; top:0; z-index:5; }
+  header .brand{ font-weight:800; font-size:20px; letter-spacing:.5px; }
+  header .tag{ font-size:11px; opacity:.85; margin-left:8px; font-weight:400; }
+  header button{ background:rgba(255,255,255,.18); color:#fff; border:none; border-radius:8px;
+    padding:7px 10px; font-size:13px; cursor:pointer; }
+  main{ flex:1; padding:16px; overflow-y:auto; }
+  .sub{ color:var(--sub); font-size:13px; line-height:1.6; }
+  h2{ font-size:20px; margin:0 0 4px; }
+  .chips{ display:flex; gap:8px; overflow-x:auto; padding:12px 0; }
+  .chip{ white-space:nowrap; padding:8px 14px; border-radius:999px; background:#fff;
+    border:1px solid var(--border); color:var(--sub); font-weight:600; cursor:pointer; font-size:13px; }
+  .chip.active{ background:var(--primary); border-color:var(--primary); color:#fff; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px;
+    margin-bottom:12px; box-shadow:0 2px 8px rgba(0,0,0,.03); }
+  .qcard{ cursor:pointer; transition:transform .05s; }
+  .qcard:active{ transform:scale(.99); }
+  .qcard .body{ font-size:16px; line-height:1.5; }
+  .qcard .meta{ color:var(--sub); font-size:12px; margin-top:8px; }
+  .genre-label{ color:var(--primary); font-weight:700; font-size:13px; margin-bottom:6px; }
+  .q-big{ font-size:19px; line-height:1.5; margin:0; }
+  textarea{ width:100%; min-height:130px; border:1px solid var(--border); border-radius:12px;
+    padding:14px; font-size:16px; font-family:inherit; resize:vertical; margin-top:8px; color:var(--text); }
+  label{ font-weight:700; display:block; margin-top:18px; }
+  .btn{ width:100%; background:var(--primary); color:#fff; border:none; border-radius:12px;
+    padding:15px; font-size:16px; font-weight:700; cursor:pointer; margin-top:16px; }
+  .btn:disabled{ background:#A9C4E2; cursor:not-allowed; }
+  .btn.ghost{ background:#fff; color:var(--primary); border:1px solid var(--primary); }
+  .block-title{ font-weight:700; margin:0 0 6px; font-size:15px; }
+  .pname{ font-weight:700; }
+  .phint{ color:var(--sub); margin-top:4px; line-height:1.5; }
+  input[type=password],input[type=text]{ width:100%; border:1px solid var(--border); border-radius:10px;
+    padding:13px; font-size:15px; margin-top:12px; font-family:inherit; }
+  a{ color:var(--primary); }
+  .tabbar{ display:flex; border-top:1px solid var(--border); background:#fff; }
+  .tabbar button{ flex:1; background:none; border:none; padding:11px 0 14px; cursor:pointer;
+    color:var(--sub); font-size:11px; }
+  .tabbar button.active{ color:var(--primary); font-weight:700; }
+  .tabbar .ic{ font-size:20px; display:block; }
+  .spinner{ width:38px; height:38px; border:4px solid #d9e4f2; border-top-color:var(--primary);
+    border-radius:50%; animation:spin 1s linear infinite; margin:40px auto 14px; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+  .center{ text-align:center; color:var(--sub); }
+  .err{ color:var(--danger); text-align:center; line-height:1.6; }
+  .empty{ text-align:center; color:var(--sub); margin-top:60px; line-height:1.7; }
+  .pill{ display:inline-block; background:#EAF1FA; color:var(--primary); border-radius:999px;
+    padding:3px 10px; font-size:12px; font-weight:700; }
+  .hist .body{ font-weight:600; margin:6px 0; line-height:1.4; }
+  .hist .ans{ color:var(--sub); font-size:13px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div><span class="brand">Elifoq</span><span class="tag">日常の「なぜ？」を思考力に</span></div>
+    <button onclick="go('settings')">⚙ 設定</button>
+  </header>
+  <main id="main"></main>
+  <nav class="tabbar" id="tabbar"></nav>
+</div>
+
+<script>
+const QUESTIONS = [
+  {id:'mkt-01',genre:'マーケティング',d:2,body:'なぜ綾鷹はコカ・コーラのロゴを前面に出さないのか？'},
+  {id:'mkt-02',genre:'マーケティング',d:1,body:'なぜスターバックスは大きな看板で安さを訴求しないのか？'},
+  {id:'mkt-03',genre:'マーケティング',d:2,body:'なぜ多くのサービスはサブスク（月額課金）に移行したのか？'},
+  {id:'it-01',genre:'IT・SIer',d:3,body:'なぜ銀行の基幹システムは古いまま使われ続けるのか？'},
+  {id:'it-02',genre:'IT・SIer',d:2,body:'なぜ多くの企業のDXは失敗するのか？'},
+  {id:'it-03',genre:'IT・SIer',d:1,body:'なぜ大学の履修登録システムはアクセスが集中すると落ちるのか？'},
+  {id:'mgt-01',genre:'経営',d:2,body:'なぜ映画館はチケットよりポップコーンで稼ぐ構造なのか？'},
+  {id:'mgt-02',genre:'経営',d:2,body:'なぜユニクロは企画から販売まで自社で一貫して行うのか？'},
+  {id:'psy-01',genre:'心理学',d:1,body:'なぜ人は行列ができている店に並びたくなるのか？'},
+  {id:'psy-02',genre:'心理学',d:2,body:'なぜ星の数のレビューは購買行動を大きく左右するのか？'},
+  {id:'soc-01',genre:'社会',d:3,body:'なぜ少子化は対策をしても止まりにくいのか？'},
+  {id:'soc-02',genre:'社会',d:2,body:'なぜ満員電車はなくならないのか？'},
+  {id:'mys-01',genre:'身近な謎',d:1,body:'なぜ信号機は赤・黄・青の3色なのか？'},
+  {id:'mys-02',genre:'身近な謎',d:1,body:'なぜ自動販売機は日本の路上にこれほど多いのか？'},
+];
+const GENRES = ['マーケティング','IT・SIer','経営','心理学','社会','身近な謎'];
+const PERSPECTIVES = ['マーケティング','顧客','技術','法規制','コスト','心理','競争戦略','社会'];
+
+const LS_KEY='elifoq.key', LS_HIST='elifoq.history';
+const getKey=()=>localStorage.getItem(LS_KEY)||'';
+const setKey=v=>localStorage.setItem(LS_KEY,v);
+const getHist=()=>{ try{ return JSON.parse(localStorage.getItem(LS_HIST)||'[]'); }catch{ return []; } };
+const pushHist=e=>{ const h=getHist(); h.unshift(e); localStorage.setItem(LS_HIST,JSON.stringify(h.slice(0,200))); };
+
+let state={ screen:'home', genre:GENRES[0], qid:null, answer:'' };
+const main=document.getElementById('main');
+const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+function go(screen,extra={}){ state={...state,screen,...extra}; render(); window.scrollTo(0,0); main.scrollTop=0; }
+
+function render(){
+  renderTabbar();
+  if(state.screen==='home') return renderHome();
+  if(state.screen==='answer') return renderAnswer();
+  if(state.screen==='feedback') return renderFeedback();
+  if(state.screen==='history') return renderHistory();
+  if(state.screen==='settings') return renderSettings();
+}
+
+function renderTabbar(){
+  const tabs=[['home','🏠','ホーム'],['history','📜','履歴'],['settings','⚙️','設定']];
+  document.getElementById('tabbar').innerHTML=tabs.map(([s,ic,l])=>
+    `<button class="${state.screen===s||(s==='home'&&['answer','feedback'].includes(state.screen))?'active':''}" onclick="go('${s}')"><span class="ic">${ic}</span>${l}</button>`).join('');
+}
+
+function renderHome(){
+  const qs=QUESTIONS.filter(q=>q.genre===state.genre);
+  main.innerHTML=`
+    <h2>今日も、なぜ？を考えよう</h2>
+    <p class="sub">ジャンルを選んで、好きな問題に挑戦できます。正解はありません。</p>
+    <div class="chips">${GENRES.map(g=>`<div class="chip ${g===state.genre?'active':''}" onclick="go('home',{genre:'${g}'})">${g}</div>`).join('')}</div>
+    ${qs.map(q=>`<div class="card qcard" onclick="go('answer',{qid:'${q.id}',answer:''})">
+        <div class="body">${esc(q.body)}</div>
+        <div class="meta">難易度 ${'★'.repeat(q.d)}</div></div>`).join('')}
+  `;
+}
+
+function renderAnswer(){
+  const q=QUESTIONS.find(x=>x.id===state.qid);
+  main.innerHTML=`
+    <div class="card"><div class="genre-label">${q.genre}</div><p class="q-big">${esc(q.body)}</p></div>
+    <label>あなたの考え</label>
+    <textarea id="ans" placeholder="まずは自分なりの仮説を書いてみよう">${esc(state.answer)}</textarea>
+    <p class="sub">目安: 30〜120字。短くてもOK。</p>
+    <button class="btn" id="submit" disabled onclick="submitAnswer()">AIに視点を広げてもらう</button>
+  `;
+  const ta=document.getElementById('ans'), btn=document.getElementById('submit');
+  const upd=()=>{ state.answer=ta.value; btn.disabled=ta.value.trim().length<5; };
+  ta.addEventListener('input',upd); upd();
+}
+
+async function submitAnswer(){
+  const q=QUESTIONS.find(x=>x.id===state.qid);
+  go('feedback');
+  main.innerHTML=`<div class="spinner"></div><p class="center">AIが視点を広げています…</p>`;
+  const key=getKey();
+  if(!key){ main.innerHTML=`<p class="err">Gemini APIキーが未設定です。<br>「設定」から登録してください。</p>
+    <button class="btn ghost" onclick="go('settings')">設定を開く</button>`; return; }
+  try{
+    const fb=await callGemini(key,q,state.answer);
+    pushHist({id:q.id+'-'+Date.now(),genre:q.genre,body:q.body,answer:state.answer,fb,at:Date.now()});
+    renderFeedbackResult(q,fb);
+  }catch(e){
+    main.innerHTML=`<p class="err">${esc(e.message)}</p>
+      <button class="btn ghost" onclick="go('home')">ホームに戻る</button>`;
+  }
+}
+
+function renderFeedback(){ /* 表示はsubmitAnswer内で行う */ }
+
+function renderFeedbackResult(q,fb){
+  const persp=(fb.other_perspectives||[]).map(p=>
+    `<div class="card"><div class="pname">${esc(p.name)}</div><div class="phint">${esc(p.hint)}</div></div>`).join('');
+  main.innerHTML=`
+    <div class="card"><span class="pill">使った視点: ${esc(fb.used_perspective||'-')}</span>
+      <p class="sub" style="margin-top:8px">あなたの回答: ${esc(state.answer)}</p></div>
+    <div class="card"><p class="block-title" style="color:var(--good)">👍 良い点</p><div>${esc(fb.good_point)}</div></div>
+    <div class="card"><p class="block-title" style="color:var(--warn)">🔍 見落としやすい点</p><div>${esc(fb.blind_spot)}</div></div>
+    <h2 style="font-size:16px;margin:8px 0">🧭 別の視点も考えてみよう</h2>
+    ${persp}
+    <div class="card"><p class="block-title" style="color:var(--primary)">❓ 発展質問</p><div>${esc(fb.follow_up_question)}</div></div>
+    <button class="btn" onclick="go('home')">別の問題に挑戦する</button>
+  `;
+}
+
+async function callGemini(key,q,answer){
+  const sys=[
+    'あなたは思考力を鍛えるコーチです。',
+    'ユーザーの答えに対して正解・不正解の判定は絶対にしないでください。',
+    'まず良い視点を1つ認め、見落としを示し、別の視点を2〜4個提示し、最後に発展質問を1つ投げかけます。',
+    '相手を否定せず、考える切り口を増やす前向きなトーンで。日本語・敬体で簡潔に。',
+    'used_perspective は次から1つ選ぶ: '+PERSPECTIVES.join(' / '),
+  ].join('\n');
+  const schema={ type:'object', properties:{
+    good_point:{type:'string'}, blind_spot:{type:'string'},
+    other_perspectives:{type:'array',items:{type:'object',properties:{name:{type:'string'},hint:{type:'string'}},required:['name','hint']}},
+    follow_up_question:{type:'string'}, used_perspective:{type:'string'} },
+    required:['good_point','blind_spot','other_perspectives','follow_up_question','used_perspective'] };
+  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key);
+  const res=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      systemInstruction:{parts:[{text:sys}]},
+      contents:[{role:'user',parts:[{text:`問題: ${q.body}\nジャンル: ${q.genre}\nユーザーの回答: ${answer}`}]}],
+      generationConfig:{temperature:0.7,responseMimeType:'application/json',responseSchema:schema}
+    })});
+  if(!res.ok){
+    if(res.status===400||res.status===403) throw new Error('APIキーが無効か権限がありません。キーを確認してください。');
+    if(res.status===429) throw new Error('無料枠のレート制限に達しました。少し待って再試行してください。');
+    throw new Error('Geminiの呼び出しに失敗しました ('+res.status+')。');
+  }
+  const data=await res.json();
+  const text=data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text) throw new Error('応答が空でした。もう一度お試しください。');
+  return JSON.parse(text);
+}
+
+function renderHistory(){
+  const h=getHist();
+  if(!h.length){ main.innerHTML=`<p class="empty">まだ回答がありません。<br>ホームから問題に挑戦してみましょう。</p>`; return; }
+  main.innerHTML=`<h2>思考履歴</h2>`+h.map(e=>`
+    <div class="card hist">
+      <span class="pill">${esc(e.genre)}・${new Date(e.at).toLocaleDateString('ja-JP')}</span>
+      <div class="body">${esc(e.body)}</div>
+      <div class="ans">あなた: ${esc(e.answer)}</div>
+      <div class="ans" style="margin-top:6px">視点: ${esc(e.fb.used_perspective)} / ${esc(e.fb.good_point)}</div>
+    </div>`).join('');
+}
+
+function renderSettings(){
+  const has=!!getKey();
+  main.innerHTML=`
+    <div class="card">
+      <p class="block-title">Gemini APIキー（BYOK）</p>
+      <p class="sub">Elifoqはあなた自身のGeminiキーで動きます。キーはこのブラウザ内にのみ保存され、外部サーバーには送りません。</p>
+      <input type="password" id="key" placeholder="AIza... から始まるキーを貼り付け" value="${esc(getKey())}" />
+      <button class="btn" onclick="saveKeyUI()">${has?'保存済み（更新する）':'保存する'}</button>
+      ${has?`<button class="btn ghost" onclick="clearKeyUI()" style="margin-top:8px">キーを削除</button>`:''}
+      <p class="sub" id="saved" style="margin-top:10px;color:var(--good)"></p>
+    </div>
+    <div class="card">
+      <p class="block-title">キーの取得方法（無料）</p>
+      <p class="sub">Google AI Studio で無料発行できます（Flash系は無料枠あり・カード不要）。</p>
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey を開く →</a>
+    </div>
+    <p class="sub center" style="margin-top:20px">Elifoq — Everyday Life Is Full Of Questions</p>
+  `;
+}
+function saveKeyUI(){ const v=document.getElementById('key').value.trim();
+  if(v.length<10){ document.getElementById('saved').textContent='キーが短すぎるようです。確認してください。'; return; }
+  setKey(v); document.getElementById('saved').textContent='保存しました ✓'; }
+function clearKeyUI(){ localStorage.removeItem(LS_KEY); renderSettings(); }
+
+render();
+</script>
+</body>
+</html>
