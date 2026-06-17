@@ -46,7 +46,7 @@
   input[type=password],input[type=text]{ width:100%; border:1px solid var(--border); border-radius:10px;
     padding:13px; font-size:15px; margin-top:12px; font-family:inherit; }
   a{ color:var(--primary); }
-  .tabbar{ display:flex; border-top:1px solid var(--border); background:#fff; }
+  .tabbar{ display:flex; border-top:1px solid var(--border); background:#fff; position:sticky; bottom:0; }
   .tabbar button{ flex:1; background:none; border:none; padding:11px 0 14px; cursor:pointer;
     color:var(--sub); font-size:11px; }
   .tabbar button.active{ color:var(--primary); font-weight:700; }
@@ -61,6 +61,15 @@
     padding:3px 10px; font-size:12px; font-weight:700; }
   .hist .body{ font-weight:600; margin:6px 0; line-height:1.4; }
   .hist .ans{ color:var(--sub); font-size:13px; }
+  .banner{ background:#FFF6E5; border:1px solid #F2D99B; border-radius:12px; padding:13px 14px;
+    margin-bottom:14px; font-size:13px; line-height:1.6; color:#7a5b13; cursor:pointer; }
+  .banner b{ color:#7a5b13; }
+  ol.guide{ margin:10px 0 4px; padding-left:20px; }
+  ol.guide li{ margin-bottom:8px; line-height:1.6; }
+  .step{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px;
+    border-radius:50%; background:var(--primary); color:#fff; font-size:13px; font-weight:700; margin-right:8px; }
+  code{ background:#EEF2F7; padding:1px 6px; border-radius:5px; font-size:13px; }
+  .saved-msg{ margin-top:10px; color:var(--good); font-weight:600; min-height:18px; }
 </style>
 </head>
 <body>
@@ -122,7 +131,10 @@ function renderTabbar(){
 
 function renderHome(){
   const qs=QUESTIONS.filter(q=>q.genre===state.genre);
+  const banner = getKey() ? '' :
+    `<div class="banner" onclick="go('settings')">🔑 <b>はじめに：</b>AIフィードバックを使うには、無料のGemini APIキーが必要です。タップして<u>設定で登録</u>しましょう（手順を案内します）。</div>`;
   main.innerHTML=`
+    ${banner}
     <h2>今日も、なぜ？を考えよう</h2>
     <p class="sub">ジャンルを選んで、好きな問題に挑戦できます。正解はありません。</p>
     <div class="chips">${GENRES.map(g=>`<div class="chip ${g===state.genre?'active':''}" onclick="go('home',{genre:'${g}'})">${g}</div>`).join('')}</div>
@@ -151,7 +163,7 @@ async function submitAnswer(){
   go('feedback');
   main.innerHTML=`<div class="spinner"></div><p class="center">AIが視点を広げています…</p>`;
   const key=getKey();
-  if(!key){ main.innerHTML=`<p class="err">Gemini APIキーが未設定です。<br>「設定」から登録してください。</p>
+  if(!key){ main.innerHTML=`<p class="err">Gemini APIキーが未設定です。<br>「設定」から登録してください（手順を案内しています）。</p>
     <button class="btn ghost" onclick="go('settings')">設定を開く</button>`; return; }
   try{
     const fb=await callGemini(key,q,state.answer);
@@ -193,15 +205,17 @@ async function callGemini(key,q,answer){
     other_perspectives:{type:'array',items:{type:'object',properties:{name:{type:'string'},hint:{type:'string'}},required:['name','hint']}},
     follow_up_question:{type:'string'}, used_perspective:{type:'string'} },
     required:['good_point','blind_spot','other_perspectives','follow_up_question','used_perspective'] };
-  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key);
-  const res=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'},
+  // キーはURLではなくヘッダー(x-goog-api-key)で送る（AIza / AQ どちらの形式にも対応）
+  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  const res=await fetch(url,{ method:'POST',
+    headers:{'Content-Type':'application/json','x-goog-api-key':key},
     body:JSON.stringify({
       systemInstruction:{parts:[{text:sys}]},
       contents:[{role:'user',parts:[{text:`問題: ${q.body}\nジャンル: ${q.genre}\nユーザーの回答: ${answer}`}]}],
       generationConfig:{temperature:0.7,responseMimeType:'application/json',responseSchema:schema}
     })});
   if(!res.ok){
-    if(res.status===400||res.status===403) throw new Error('APIキーが無効か権限がありません。キーを確認してください。');
+    if(res.status===400||res.status===401||res.status===403) throw new Error('APIキーが無効か権限がありません。設定でキーを確認してください。');
     if(res.status===429) throw new Error('無料枠のレート制限に達しました。少し待って再試行してください。');
     throw new Error('Geminiの呼び出しに失敗しました ('+res.status+')。');
   }
@@ -226,25 +240,33 @@ function renderHistory(){
 function renderSettings(){
   const has=!!getKey();
   main.innerHTML=`
+    <h2>設定</h2>
     <div class="card">
-      <p class="block-title">Gemini APIキー（BYOK）</p>
-      <p class="sub">Elifoqはあなた自身のGeminiキーで動きます。キーはこのブラウザ内にのみ保存され、外部サーバーには送りません。</p>
-      <input type="password" id="key" placeholder="AIza... から始まるキーを貼り付け" value="${esc(getKey())}" />
+      <p class="block-title"><span class="step">1</span>Gemini APIキーを取得（無料）</p>
+      <p class="sub">「自分専用のAIの鍵」を無料でもらう手順です。1〜2分で終わります。</p>
+      <ol class="guide">
+        <li><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio のキー作成ページ</a>を開く</li>
+        <li>Googleアカウントでログイン（普段のGmailでOK）</li>
+        <li>青いボタン「<b>Create API key / APIキーを作成</b>」を押す</li>
+        <li>表示された文字列（<code>AIza…</code> または <code>AQ…</code> で始まる）を<b>コピー</b></li>
+      </ol>
+      <p class="sub">クレジットカードは不要。Flash系モデルは無料枠で使えます。</p>
+    </div>
+    <div class="card">
+      <p class="block-title"><span class="step">2</span>コピーしたキーを貼り付けて保存</p>
+      <input type="password" id="key" placeholder="ここに長い文字列を貼り付け" value="${esc(getKey())}" />
       <button class="btn" onclick="saveKeyUI()">${has?'保存済み（更新する）':'保存する'}</button>
       ${has?`<button class="btn ghost" onclick="clearKeyUI()" style="margin-top:8px">キーを削除</button>`:''}
-      <p class="sub" id="saved" style="margin-top:10px;color:var(--good)"></p>
+      <p class="saved-msg" id="saved">${has?'登録済みです ✓ ホームから問題に挑戦できます。':''}</p>
+      <p class="sub">キーはこのブラウザの中だけに保存され、外部のサーバーには一切送られません。スマホを変えたら再登録が必要です。</p>
     </div>
-    <div class="card">
-      <p class="block-title">キーの取得方法（無料）</p>
-      <p class="sub">Google AI Studio で無料発行できます（Flash系は無料枠あり・カード不要）。</p>
-      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">aistudio.google.com/app/apikey を開く →</a>
-    </div>
-    <p class="sub center" style="margin-top:20px">Elifoq — Everyday Life Is Full Of Questions</p>
+    <p class="sub center" style="margin-top:18px">Elifoq — Everyday Life Is Full Of Questions</p>
   `;
 }
 function saveKeyUI(){ const v=document.getElementById('key').value.trim();
-  if(v.length<10){ document.getElementById('saved').textContent='キーが短すぎるようです。確認してください。'; return; }
-  setKey(v); document.getElementById('saved').textContent='保存しました ✓'; }
+  const msg=document.getElementById('saved');
+  if(v.length<15){ msg.style.color='var(--danger)'; msg.textContent='キーが短いようです。全部コピーできているか確認してください。'; return; }
+  setKey(v); msg.style.color='var(--good)'; msg.textContent='保存しました ✓ ホームから問題に挑戦できます。'; }
 function clearKeyUI(){ localStorage.removeItem(LS_KEY); renderSettings(); }
 
 render();
