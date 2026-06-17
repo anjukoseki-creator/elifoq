@@ -179,7 +179,7 @@ function render(){
   renderTabbar();
   if(state.screen==='home') return renderHome();
   if(state.screen==='answer') return renderAnswer();
-  if(state.screen==='feedback') return showFeedback();
+  if(state.screen==='feedback') return state.current?showFeedback():spinner('AIが採点しています…');
   if(state.screen==='history') return renderHistory();
   if(state.screen==='histdetail') return renderHistoryDetail();
   if(state.screen==='settings') return renderSettings();
@@ -228,7 +228,7 @@ function spinner(msg){ main.innerHTML=`<div class="spinner"></div><p class="cent
 
 async function submitAnswer(){
   const q=QUESTIONS.find(x=>x.id===state.qid);
-  go('feedback'); spinner('AIが採点して視点を広げています…');
+  state.screen='feedback'; state.current=null; renderTabbar(); window.scrollTo(0,0); main.scrollTop=0; spinner('AIが採点して視点を広げています…');
   const key=getKey();
   if(!key){ main.innerHTML=`<p class="err">Gemini APIキーが未設定です。<br>「設定」から登録してください（手順を案内しています）。</p>
     <button class="btn ghost" onclick="go('settings')">設定を開く</button>`; return; }
@@ -245,7 +245,7 @@ async function submitFollowup(){
   const cur=state.current; const ta=document.getElementById('fans'); const ans=ta.value.trim();
   if(ans.length<5) return;
   const fq=cur.fb.follow_up_question;
-  go('feedback'); spinner('発展回答を採点しています…');
+  state.screen='feedback'; renderTabbar(); window.scrollTo(0,0); main.scrollTop=0; spinner('発展回答を採点しています…');
   const key=getKey();
   try{
     const prior=`【背景】元の問題: ${cur.question}\nそれに対するあなたの回答: ${cur.answer}\n（以下は、その発展質問「${fq}」へのあなたの回答です。発展質問に答えられているかも踏まえて評価してください）`;
@@ -346,9 +346,9 @@ async function callGemini(key,p){
     follow_up_question:{type:'string'} },
     required:['overall_score','overall_comment','scores','good_point','blind_spot','other_perspectives','model_answer','follow_up_question'] };
   const userText=(p.prior?p.prior+'\n':'')+`問題: ${p.question}\nジャンル: ${p.genre}\nユーザーの回答: ${p.answer}`;
-  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key);
   const res=await fetch(url,{ method:'POST',
-    headers:{'Content-Type':'application/json','x-goog-api-key':key},
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       systemInstruction:{parts:[{text:sys}]},
       contents:[{role:'user',parts:[{text:userText}]}],
