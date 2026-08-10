@@ -87,6 +87,32 @@
   .histcard{ cursor:pointer; }
   .backlink{ color:var(--primary); font-weight:600; cursor:pointer; display:inline-block; margin-bottom:8px; font-size:14px; }
   .ftag{ display:inline-block; background:#EFE7FB; color:#6B3FA0; border-radius:999px; padding:2px 9px; font-size:11px; font-weight:700; margin-bottom:6px; }
+  /* ゲーミフィケーション */
+  .hero{ background:linear-gradient(135deg,var(--primary),var(--primary-d)); color:#fff; border-radius:16px; padding:16px 16px 14px; margin-bottom:14px; }
+  .hero h2{ color:#fff; margin:2px 0 10px; font-size:19px; }
+  .hero .lv{ display:inline-block; background:rgba(255,255,255,.22); border-radius:999px; padding:3px 11px; font-size:12px; font-weight:700; }
+  .stats{ display:flex; gap:8px; }
+  .stat{ flex:1; background:rgba(255,255,255,.14); border-radius:12px; padding:10px 6px; text-align:center; }
+  .stat .n{ font-size:23px; font-weight:800; line-height:1; }
+  .stat .l{ font-size:11px; opacity:.92; margin-top:5px; }
+  .daily{ border:2px solid var(--primary); background:#fff; border-radius:14px; padding:14px; margin-bottom:14px; cursor:pointer; transition:transform .05s; }
+  .daily:active{ transform:scale(.99); }
+  .daily .cap{ color:var(--primary); font-weight:800; font-size:12px; margin-bottom:6px; }
+  .daily .db{ font-size:16px; line-height:1.5; font-weight:600; }
+  .prog{ color:var(--sub); font-size:12px; margin:2px 2px 10px; font-weight:600; }
+  .solved{ display:inline-block; background:var(--good); color:#fff; border-radius:999px; font-size:11px; font-weight:700; padding:1px 8px; margin-left:6px; vertical-align:middle; }
+  .qcard.done{ opacity:.7; }
+  .qgrid{ display:block; }
+  .encourage{ background:#FFF6E5; border:1px solid #F2D99B; color:#7a5b13; border-radius:12px; padding:11px 14px; margin-bottom:12px; font-weight:600; text-align:center; line-height:1.5; font-size:13px; }
+  @media(min-width:820px){
+    .app{ max-width:940px; }
+    main{ padding:24px 28px; }
+    .qgrid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:start; }
+    .qgrid .card{ margin-bottom:0; }
+    .narrow{ max-width:680px; margin-left:auto; margin-right:auto; }
+    .stat .n{ font-size:27px; }
+    .tabbar{ max-width:940px; margin:0 auto; }
+  }
 </style>
 </head>
 <body>
@@ -155,8 +181,147 @@ const QUESTIONS = [
   {id:'mys-06',genre:'身近な謎',d:2,body:'なぜ多くのエレベーターには鏡があるのか？'},
   {id:'mys-07',genre:'身近な謎',d:1,body:'なぜ書店では本にカバーを掛けてくれるのか？'},
   {id:'mys-08',genre:'身近な謎',d:2,body:'なぜ食品サンプルは日本でこれほど発達したのか？'},
+  // 科学・テクノロジー
+  {id:'sci-01',genre:'科学・テクノロジー',d:1,body:'なぜ空は青いのか？'},
+  {id:'sci-02',genre:'科学・テクノロジー',d:2,body:'なぜAIは「もっともらしい嘘」をつくことがあるのか？'},
+  {id:'sci-03',genre:'科学・テクノロジー',d:2,body:'なぜワクチンは病気を予防できるのか？'},
+  {id:'sci-04',genre:'科学・テクノロジー',d:3,body:'なぜ電気自動車は必ずしも環境に優しいとは限らないのか？'},
+  {id:'sci-05',genre:'科学・テクノロジー',d:2,body:'なぜスマホのバッテリーは数年で劣化するのか？'},
+  {id:'sci-06',genre:'科学・テクノロジー',d:2,body:'なぜ天気予報は完璧には当たらないのか？'},
+  {id:'sci-07',genre:'科学・テクノロジー',d:2,body:'なぜ宇宙開発に多額の予算が使われるのか？'},
+  {id:'sci-08',genre:'科学・テクノロジー',d:2,body:'なぜ生成AIは急速に普及したのか？'},
+  // 歴史
+  {id:'his-01',genre:'歴史',d:2,body:'なぜ日本は長く鎖国をしていたのか？'},
+  {id:'his-02',genre:'歴史',d:3,body:'なぜ産業革命はイギリスで最初に起きたのか？'},
+  {id:'his-03',genre:'歴史',d:3,body:'なぜ多くの帝国は最終的に崩壊したのか？'},
+  {id:'his-04',genre:'歴史',d:2,body:'なぜ文字の発明は社会を大きく変えたのか？'},
+  {id:'his-05',genre:'歴史',d:2,body:'なぜ江戸時代は260年も続いたのか？'},
+  {id:'his-06',genre:'歴史',d:2,body:'なぜ人類は都市に集まって暮らすようになったのか？'},
+  {id:'his-07',genre:'歴史',d:2,body:'なぜ貨幣は世界中で使われるようになったのか？'},
+  {id:'his-08',genre:'歴史',d:3,body:'なぜ同じような戦争が歴史上くり返されるのか？'},
+  // お金・投資
+  {id:'fin-01',genre:'お金・投資',d:2,body:'なぜ物価は少しずつ上がり続けるのか？'},
+  {id:'fin-02',genre:'お金・投資',d:2,body:'なぜ銀行に預けても利息がほとんどつかないのか？'},
+  {id:'fin-03',genre:'お金・投資',d:2,body:'なぜ株価は日々変動するのか？'},
+  {id:'fin-04',genre:'お金・投資',d:2,body:'なぜ「分散投資」が推奨されるのか？'},
+  {id:'fin-05',genre:'お金・投資',d:1,body:'なぜ宝くじは買う人が多いのに損しやすいのか？'},
+  {id:'fin-06',genre:'お金・投資',d:2,body:'なぜクレジットカードは手数料無料で使えるのか？'},
+  {id:'fin-07',genre:'お金・投資',d:3,body:'なぜ円安・円高は生活に影響するのか？'},
+  {id:'fin-08',genre:'お金・投資',d:2,body:'なぜ保険という仕組みは成り立つのか？'},
+  // 働き方・キャリア
+  {id:'car-01',genre:'働き方・キャリア',d:2,body:'なぜ日本では新卒一括採用が根強いのか？'},
+  {id:'car-02',genre:'働き方・キャリア',d:1,body:'なぜ会議は増えがちなのか？'},
+  {id:'car-03',genre:'働き方・キャリア',d:2,body:'なぜ副業を認める企業が増えているのか？'},
+  {id:'car-04',genre:'働き方・キャリア',d:2,body:'なぜ「やりがい」だけでは仕事は続かないのか？'},
+  {id:'car-05',genre:'働き方・キャリア',d:3,body:'なぜ成果主義はうまく機能しないことがあるのか？'},
+  {id:'car-06',genre:'働き方・キャリア',d:2,body:'なぜ転職が当たり前になってきたのか？'},
+  {id:'car-07',genre:'働き方・キャリア',d:2,body:'なぜリーダーには聞く力が求められるのか？'},
+  {id:'car-08',genre:'働き方・キャリア',d:2,body:'なぜ長時間労働はなくなりにくいのか？'},
+  // 各ジャンル追加（→15問化）
+  {id:'mkt-09',genre:'マーケティング',d:2,body:'なぜ多くのCMは商品そのものより「イメージ」を売るのか？'},
+  {id:'mkt-10',genre:'マーケティング',d:2,body:'なぜ口コミはテレビ広告より信頼されやすいのか？'},
+  {id:'mkt-11',genre:'マーケティング',d:1,body:'なぜ値段の末尾は「980円」が多いのか？'},
+  {id:'mkt-12',genre:'マーケティング',d:3,body:'なぜ人気商品ほど「あえて品薄」にすることがあるのか？'},
+  {id:'mkt-13',genre:'マーケティング',d:2,body:'なぜ企業はSNSでキャラクターを演じるのか？'},
+  {id:'mkt-14',genre:'マーケティング',d:2,body:'なぜ同じ商品でも売る場所で値段が変わるのか？'},
+  {id:'mkt-15',genre:'マーケティング',d:1,body:'なぜ試食やサンプルは購買につながりやすいのか？'},
+  {id:'it-09',genre:'IT・SIer',d:2,body:'なぜ「仕様変更」はプロジェクトを混乱させやすいのか？'},
+  {id:'it-10',genre:'IT・SIer',d:3,body:'なぜ多重下請け構造はIT業界で生まれたのか？'},
+  {id:'it-11',genre:'IT・SIer',d:2,body:'なぜバグはゼロにできないのか？'},
+  {id:'it-12',genre:'IT・SIer',d:2,body:'なぜ見積もりは実際とズレやすいのか？'},
+  {id:'it-13',genre:'IT・SIer',d:3,body:'なぜ古いシステムはなかなか捨てられないのか？'},
+  {id:'it-14',genre:'IT・SIer',d:1,body:'なぜドキュメント整備は後回しにされやすいのか？'},
+  {id:'it-15',genre:'IT・SIer',d:2,body:'なぜ「作れば終わり」ではなく運用が重要なのか？'},
+  {id:'mgt-09',genre:'経営',d:3,body:'なぜ多角化した企業が経営難に陥ることがあるのか？'},
+  {id:'mgt-10',genre:'経営',d:2,body:'なぜ現金を多く持つ企業ほど強いと言われるのか？'},
+  {id:'mgt-11',genre:'経営',d:3,body:'なぜM&A（買収）は失敗することが多いのか？'},
+  {id:'mgt-12',genre:'経営',d:2,body:'なぜ企業理念やビジョンが重視されるのか？'},
+  {id:'mgt-13',genre:'経営',d:3,body:'なぜ利益より「キャッシュフロー」が大事と言われるのか？'},
+  {id:'mgt-14',genre:'経営',d:2,body:'なぜ大企業ほど意思決定が遅くなりやすいのか？'},
+  {id:'mgt-15',genre:'経営',d:2,body:'なぜ「選択と集中」が経営で語られるのか？'},
+  {id:'psy-09',genre:'心理学',d:2,body:'なぜ人は損を避けたい気持ちが強いのか？'},
+  {id:'psy-10',genre:'心理学',d:1,body:'なぜ他人の目があると行動が変わるのか？'},
+  {id:'psy-11',genre:'心理学',d:2,body:'なぜ一度始めたことはやめにくいのか？'},
+  {id:'psy-12',genre:'心理学',d:1,body:'なぜ「みんなやっている」と安心してしまうのか？'},
+  {id:'psy-13',genre:'心理学',d:1,body:'なぜ締め切り直前に集中力が上がるのか？'},
+  {id:'psy-14',genre:'心理学',d:2,body:'なぜ人は第一印象に引きずられやすいのか？'},
+  {id:'psy-15',genre:'心理学',d:1,body:'なぜ「ご褒美」は行動を続ける助けになるのか？'},
+  {id:'soc-09',genre:'社会',d:2,body:'なぜ都市に人口が集中し続けるのか？'},
+  {id:'soc-10',genre:'社会',d:3,body:'なぜ「多数決」は万能ではないのか？'},
+  {id:'soc-11',genre:'社会',d:2,body:'なぜフェイクニュースは広がりやすいのか？'},
+  {id:'soc-12',genre:'社会',d:3,body:'なぜボランティアだけでは社会課題が解決しにくいのか？'},
+  {id:'soc-13',genre:'社会',d:2,body:'なぜ環境問題は「自分ごと」になりにくいのか？'},
+  {id:'soc-14',genre:'社会',d:2,body:'なぜルールは増える一方で減りにくいのか？'},
+  {id:'soc-15',genre:'社会',d:3,body:'なぜ格差はいちど広がると縮まりにくいのか？'},
+  {id:'mys-09',genre:'身近な謎',d:1,body:'なぜ電車の座席はロングシートが多いのか？'},
+  {id:'mys-10',genre:'身近な謎',d:2,body:'なぜドラッグストアは急激に増えたのか？'},
+  {id:'mys-11',genre:'身近な謎',d:1,body:'なぜ回転寿司は皿の色で値段を分けるのか？'},
+  {id:'mys-12',genre:'身近な謎',d:1,body:'なぜトイレの擬音装置は日本で普及したのか？'},
+  {id:'mys-13',genre:'身近な謎',d:2,body:'なぜ多くの店では音楽が流れているのか？'},
+  {id:'mys-14',genre:'身近な謎',d:1,body:'なぜ祭りの屋台は割高でも売れるのか？'},
+  {id:'mys-15',genre:'身近な謎',d:2,body:'なぜ日本の駅や道路はこれほど案内表示が多いのか？'},
+  {id:'sci-09',genre:'科学・テクノロジー',d:3,body:'なぜインターネットは災害に強い設計なのか？'},
+  {id:'sci-10',genre:'科学・テクノロジー',d:2,body:'なぜパソコンは使うほど遅くなったと感じるのか？'},
+  {id:'sci-11',genre:'科学・テクノロジー',d:3,body:'なぜ新薬の開発には長い年月がかかるのか？'},
+  {id:'sci-12',genre:'科学・テクノロジー',d:3,body:'なぜ再生可能エネルギーだけでは電力を賄いにくいのか？'},
+  {id:'sci-13',genre:'科学・テクノロジー',d:2,body:'なぜ人はロボットに親しみや不気味さを感じるのか？'},
+  {id:'sci-14',genre:'科学・テクノロジー',d:3,body:'なぜ量子コンピュータが注目されているのか？'},
+  {id:'sci-15',genre:'科学・テクノロジー',d:2,body:'なぜ科学の「定説」は覆ることがあるのか？'},
+  {id:'his-09',genre:'歴史',d:2,body:'なぜ農耕の始まりは人類を大きく変えたのか？'},
+  {id:'his-10',genre:'歴史',d:3,body:'なぜ宗教は世界中で生まれたのか？'},
+  {id:'his-11',genre:'歴史',d:2,body:'なぜ交易路は文明を発展させたのか？'},
+  {id:'his-12',genre:'歴史',d:3,body:'なぜ革命は既存の体制を倒せたのか？'},
+  {id:'his-13',genre:'歴史',d:3,body:'なぜ歴史は「勝者」の視点で語られやすいのか？'},
+  {id:'his-14',genre:'歴史',d:2,body:'なぜ感染症は歴史を動かしてきたのか？'},
+  {id:'his-15',genre:'歴史',d:3,body:'なぜ技術の発明は戦争と結びつきやすいのか？'},
+  {id:'fin-09',genre:'お金・投資',d:2,body:'なぜ「複利」は長期でこれほど差を生むのか？'},
+  {id:'fin-10',genre:'お金・投資',d:2,body:'なぜ人はお金の話を避けたがるのか？'},
+  {id:'fin-11',genre:'お金・投資',d:3,body:'なぜ借金は必ずしも悪ではないのか？'},
+  {id:'fin-12',genre:'お金・投資',d:2,body:'なぜ「安いから買う」は損につながりやすいのか？'},
+  {id:'fin-13',genre:'お金・投資',d:2,body:'なぜ投資では「時間」が味方になるのか？'},
+  {id:'fin-14',genre:'お金・投資',d:3,body:'なぜ景気は好況と不況をくり返すのか？'},
+  {id:'fin-15',genre:'お金・投資',d:2,body:'なぜお金を「使う力」も大切なのか？'},
+  {id:'car-09',genre:'働き方・キャリア',d:1,body:'なぜ「報連相」が仕事で重視されるのか？'},
+  {id:'car-10',genre:'働き方・キャリア',d:2,body:'なぜ強みを活かす方が成長しやすいのか？'},
+  {id:'car-11',genre:'働き方・キャリア',d:2,body:'なぜチームは多様性があると強くなるのか？'},
+  {id:'car-12',genre:'働き方・キャリア',d:2,body:'なぜ「やらされ仕事」はモチベーションが下がるのか？'},
+  {id:'car-13',genre:'働き方・キャリア',d:3,body:'なぜキャリアは計画通りに進まないことが多いのか？'},
+  {id:'car-14',genre:'働き方・キャリア',d:2,body:'なぜ学び続ける人が長く活躍しやすいのか？'},
+  {id:'car-15',genre:'働き方・キャリア',d:2,body:'なぜ「働く目的」は人それぞれ違ってよいのか？'},
+  // 自社開発
+  {id:'own-01',genre:'自社開発',d:2,body:'なぜ自社サービス（自社開発）を選ぶ企業が増えているのか？'},
+  {id:'own-02',genre:'自社開発',d:2,body:'なぜ自社開発は受託開発よりスピードを出しやすいのか？'},
+  {id:'own-03',genre:'自社開発',d:3,body:'なぜプロダクトは「何を作らないか」の方が難しいのか？'},
+  {id:'own-04',genre:'自社開発',d:3,body:'なぜユーザーの声を聞きすぎると失敗することがあるのか？'},
+  {id:'own-05',genre:'自社開発',d:2,body:'なぜMVP（最小限の製品）から始めるのがよいとされるのか？'},
+  {id:'own-06',genre:'自社開発',d:2,body:'なぜ機能を足すほどプロダクトは使いにくくなりやすいのか？'},
+  {id:'own-07',genre:'自社開発',d:3,body:'なぜ技術的負債は溜まっていくのか？'},
+  {id:'own-08',genre:'自社開発',d:2,body:'なぜ「動くもの」を早く出すことが重視されるのか？'},
+  {id:'own-09',genre:'自社開発',d:2,body:'なぜ自社開発ではエンジニアの裁量が大きくなりやすいのか？'},
+  {id:'own-10',genre:'自社開発',d:3,body:'なぜKPIを追いすぎると本質を見失うことがあるのか？'},
+  {id:'own-11',genre:'自社開発',d:2,body:'なぜ良いプロダクトほど「シンプル」に見えるのか？'},
+  {id:'own-12',genre:'自社開発',d:2,body:'なぜリリース後の改善サイクルが競争力になるのか？'},
+  {id:'own-13',genre:'自社開発',d:3,body:'なぜ内製化はコストがかかっても選ばれるのか？'},
+  {id:'own-14',genre:'自社開発',d:2,body:'なぜチームの心理的安全性がプロダクトの質を左右するのか？'},
+  {id:'own-15',genre:'自社開発',d:3,body:'なぜ「作りたいもの」と「売れるもの」は一致しにくいのか？'},
+  // キャリアコンサルタント
+  {id:'ccc-01',genre:'キャリアコンサルタント',d:3,body:'なぜキャリアの悩みは「答えを教える」だけでは解決しないのか？'},
+  {id:'ccc-02',genre:'キャリアコンサルタント',d:2,body:'なぜ相談者は自分の強みに気づきにくいのか？'},
+  {id:'ccc-03',genre:'キャリアコンサルタント',d:2,body:'なぜ「やりたいこと」がわからない人は多いのか？'},
+  {id:'ccc-04',genre:'キャリアコンサルタント',d:2,body:'なぜ傾聴（じっくり聞くこと）が支援の基本とされるのか？'},
+  {id:'ccc-05',genre:'キャリアコンサルタント',d:2,body:'なぜキャリアは「点」ではなく「線」で考えるとよいのか？'},
+  {id:'ccc-06',genre:'キャリアコンサルタント',d:3,body:'なぜ転職が必ずしも問題解決になるとは限らないのか？'},
+  {id:'ccc-07',genre:'キャリアコンサルタント',d:2,body:'なぜ自己分析だけでは進路が決まりにくいのか？'},
+  {id:'ccc-08',genre:'キャリアコンサルタント',d:2,body:'なぜ「will・can・must」の重なりが大切と言われるのか？'},
+  {id:'ccc-09',genre:'キャリアコンサルタント',d:2,body:'なぜ人は環境を変えると力を発揮できることがあるのか？'},
+  {id:'ccc-10',genre:'キャリアコンサルタント',d:2,body:'なぜ他者からのフィードバックが自己理解を深めるのか？'},
+  {id:'ccc-11',genre:'キャリアコンサルタント',d:3,body:'なぜキャリアには「偶然」が大きく影響するのか？'},
+  {id:'ccc-12',genre:'キャリアコンサルタント',d:3,body:'なぜ「正解のキャリア」を求めるほど苦しくなるのか？'},
+  {id:'ccc-13',genre:'キャリアコンサルタント',d:2,body:'なぜ働く価値観は年齢やライフイベントで変わるのか？'},
+  {id:'ccc-14',genre:'キャリアコンサルタント',d:2,body:'なぜ小さな一歩を促すことが支援で効果的なのか？'},
+  {id:'ccc-15',genre:'キャリアコンサルタント',d:3,body:'なぜキャリア支援では「答えを与えない」ことが重要なのか？'},
 ];
-const GENRES = ['マーケティング','IT・SIer','経営','心理学','社会','身近な謎'];
+const GENRES = ['マーケティング','IT・SIer','自社開発','経営','心理学','社会','身近な謎','科学・テクノロジー','歴史','お金・投資','働き方・キャリア','キャリアコンサルタント'];
 const PERSPECTIVES = ['マーケティング','顧客','技術','法規制','コスト','心理','競争戦略','社会'];
 const DIMENSIONS = [
   ['問題定義力','何が本当に問うべき論点かを捉えられているか'],
@@ -173,7 +338,42 @@ const LS_KEY='elifoq.key', LS_HIST='elifoq.history';
 const getKey=()=>localStorage.getItem(LS_KEY)||'';
 const setKey=v=>localStorage.setItem(LS_KEY,v);
 const getHist=()=>{ try{ return JSON.parse(localStorage.getItem(LS_HIST)||'[]'); }catch{ return []; } };
-const pushHist=e=>{ const h=getHist(); h.unshift(e); localStorage.setItem(LS_HIST,JSON.stringify(h.slice(0,200))); };
+const pushHist=e=>{ const h=getHist(); h.unshift(e); localStorage.setItem(LS_HIST,JSON.stringify(h.slice(0,500))); };
+
+// --- ゲーミフィケーション ---
+function answeredSet(){ const s=new Set(); for(const e of getHist()){ if(e.kind==='main') s.add(e.question); } return s; }
+function computeStats(){
+  const h=getHist();
+  const scores=h.map(e=>Number(e.fb&&e.fb.overall_score)).filter(n=>!isNaN(n));
+  const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length*10)/10:0;
+  const days=new Set(h.map(e=>new Date(e.at).toDateString()));
+  const has=dt=>days.has(dt.toDateString());
+  let streak=0, cur=new Date();
+  if(!has(cur)) cur.setDate(cur.getDate()-1);
+  while(has(cur)){ streak++; cur.setDate(cur.getDate()-1); }
+  const today=new Date().toDateString();
+  const todayCount=h.filter(e=>new Date(e.at).toDateString()===today).length;
+  return { total:h.length, avg, streak, todayCount };
+}
+function levelTitle(total){
+  if(total>=100) return '思考の達人';
+  if(total>=50) return '思考マスター';
+  if(total>=20) return '一人前の思考家';
+  if(total>=5) return 'かけだし思考家';
+  return 'はじめの一歩';
+}
+function dailyQuestion(){
+  const d=new Date(); const key=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+  let x=(key%2147483647)||1; x=(x*48271)%2147483647;
+  return QUESTIONS[x%QUESTIONS.length];
+}
+function encourageMsg(){
+  const s=computeStats(); const parts=[];
+  if(s.streak>=2) parts.push(`🔥 ${s.streak}日連続！すばらしい継続です`);
+  if(s.todayCount>=3) parts.push(`💪 今日はもう${s.todayCount}問、絶好調`);
+  parts.push(`これまで${s.total}問クリア（${levelTitle(s.total)}）`);
+  return parts.join('　・　');
+}
 
 let state={ screen:'home', genre:GENRES[0], qid:null, answer:'', current:null, histId:null };
 const main=document.getElementById('main');
@@ -203,28 +403,46 @@ function renderTabbar(){
 
 function renderHome(){
   const qs=QUESTIONS.filter(q=>q.genre===state.genre);
+  const done=answeredSet();
+  const st=computeStats();
+  const dq=dailyQuestion();
+  const doneCount=qs.filter(q=>done.has(q.body)).length;
   const banner = getKey() ? '' :
-    `<div class="banner" onclick="go('settings')">🔑 <b>はじめに：</b>AIフィードバックを使うには、無料のGemini APIキーが必要です。タップして<u>設定で登録</u>しましょう（手順を案内します）。</div>`;
+    `<div class="banner" onclick="go('settings')">🔑 <b>はじめに：</b>AIフィードバックを使うには、Claude（Anthropic）APIキーが必要です。タップして<u>設定で登録</u>しましょう（手順を案内します）。</div>`;
   main.innerHTML=`
     ${banner}
-    <h2>今日も、なぜ？を考えよう</h2>
+    <div class="hero">
+      <span class="lv">🏅 ${esc(levelTitle(st.total))}</span>
+      <h2>今日も、なぜ？を考えよう</h2>
+      <div class="stats">
+        <div class="stat"><div class="n">${st.streak}</div><div class="l">🔥 連続日数</div></div>
+        <div class="stat"><div class="n">${st.total}</div><div class="l">📝 のべ回答</div></div>
+        <div class="stat"><div class="n">${st.avg||'—'}</div><div class="l">⭐ 平均点</div></div>
+      </div>
+    </div>
+    <div class="daily" onclick="go('answer',{qid:'${dq.id}',answer:''})">
+      <div class="cap">🎯 今日の一問　<span style="color:var(--sub);font-weight:600">${esc(dq.genre)}</span></div>
+      <div class="db">${esc(dq.body)}</div>
+    </div>
     <p class="sub">ジャンルを選んで、好きな問題に挑戦できます。正解はありません。</p>
     <div class="chips">${GENRES.map(g=>`<div class="chip ${g===state.genre?'active':''}" onclick="go('home',{genre:'${g}'})">${g}</div>`).join('')}</div>
-    ${qs.map(q=>`<div class="card qcard" onclick="go('answer',{qid:'${q.id}',answer:''})">
-        <div class="body">${esc(q.body)}</div>
-        <div class="meta">難易度 ${'★'.repeat(q.d)}</div></div>`).join('')}
+    <div class="prog">${esc(state.genre)}：${doneCount} / ${qs.length} 問クリア</div>
+    <div class="qgrid">${qs.map(q=>{ const d=done.has(q.body);
+      return `<div class="card qcard ${d?'done':''}" onclick="go('answer',{qid:'${q.id}',answer:''})">
+        <div class="body">${esc(q.body)}${d?'<span class="solved">✓ 挑戦済み</span>':''}</div>
+        <div class="meta">難易度 ${'★'.repeat(q.d)}</div></div>`; }).join('')}</div>
   `;
 }
 
 function renderAnswer(){
   const q=QUESTIONS.find(x=>x.id===state.qid);
-  main.innerHTML=`
+  main.innerHTML=`<div class="narrow">
     <div class="card"><div class="genre-label">${q.genre}</div><p class="q-big">${esc(q.body)}</p></div>
     <label>あなたの考え</label>
     <textarea id="ans" placeholder="まずは自分なりの仮説を書いてみよう">${esc(state.answer)}</textarea>
     <p class="sub">目安: 30〜120字。短くてもOK。</p>
     <button class="btn" id="submit" disabled onclick="submitAnswer()">AIに採点＆視点を広げてもらう</button>
-  `;
+  </div>`;
   const ta=document.getElementById('ans'), btn=document.getElementById('submit');
   const upd=()=>{ state.answer=ta.value; btn.disabled=ta.value.trim().length<5; };
   ta.addEventListener('input',upd); upd();
@@ -236,10 +454,10 @@ async function submitAnswer(){
   const q=QUESTIONS.find(x=>x.id===state.qid);
   state.screen='feedback'; state.current=null; renderTabbar(); window.scrollTo(0,0); main.scrollTop=0; spinner('AIが採点して視点を広げています…');
   const key=getKey();
-  if(!key){ main.innerHTML=`<p class="err">Gemini APIキーが未設定です。<br>「設定」から登録してください（手順を案内しています）。</p>
+  if(!key){ main.innerHTML=`<p class="err">Claude APIキーが未設定です。<br>「設定」から登録してください（手順を案内しています）。</p>
     <button class="btn ghost" onclick="go('settings')">設定を開く</button>`; return; }
   try{
-    const fb=await callGemini(key,{question:q.body,genre:q.genre,answer:state.answer,prior:null});
+    const fb=await callClaude(key,{question:q.body,genre:q.genre,answer:state.answer,prior:null});
     state.current={genre:q.genre,question:q.body,answer:state.answer,fb};
     saveRound('main');
     showFeedback();
@@ -255,7 +473,7 @@ async function submitFollowup(){
   const key=getKey();
   try{
     const prior=`【背景】元の問題: ${cur.question}\nそれに対するあなたの回答: ${cur.answer}\n（以下は、その発展質問「${fq}」へのあなたの回答です。発展質問に答えられているかも踏まえて評価してください）`;
-    const fb=await callGemini(key,{question:fq,genre:cur.genre,answer:ans,prior});
+    const fb=await callClaude(key,{question:fq,genre:cur.genre,answer:ans,prior});
     state.current={genre:cur.genre,question:fq,answer:ans,fb};
     saveRound('followup');
     showFeedback();
@@ -312,12 +530,13 @@ function feedbackHTML(c, withFollowup){
 
 function showFeedback(){
   const c=state.current;
-  main.innerHTML=`
+  main.innerHTML=`<div class="narrow">
+    <div class="encourage">${esc(encourageMsg())}</div>
     <div class="card"><div class="genre-label">${esc(c.genre)}</div>
       <p class="q-big" style="font-size:16px">${esc(c.question)}</p>
       <p class="sub" style="margin-top:8px">あなたの回答: ${esc(c.answer)}</p></div>
     ${feedbackHTML(c,true)}
-  `;
+  </div>`;
   wireFollowup();
 }
 
@@ -328,7 +547,7 @@ function wireFollowup(){
   ta.addEventListener('input',upd); upd();
 }
 
-async function callGemini(key,p){
+async function callClaude(key,p){
   const sys=[
     'あなたは思考力を鍛えるコーチ兼、ケース面接の評価者です。',
     '目的は「正解を当てさせること」ではなく、回答者の思考の質を評価し、考え方の幅を広げることです。',
@@ -337,7 +556,7 @@ async function callGemini(key,p){
     'overall_score は総合点(0〜10の整数)。良い点→見落とし→別の視点(2〜4個)→模範回答例→発展質問、の順で内容も返します。',
     'model_answer には、その問題に対する筋の良い回答例を3〜5文で具体的に示してください。',
     'follow_up_question は、回答者の思考をさらに一段深めるための問いを1つ。',
-    '全体に日本語・敬体で簡潔に。出力は指定JSONのみ。',
+    '全体に日本語・敬体で簡潔に。出力は指定スキーマのJSONのみ。',
   ].join('\n');
   const dimEnum=DIMENSIONS.map(d=>d[0]);
   const schema={ type:'object', properties:{
@@ -345,48 +564,63 @@ async function callGemini(key,p){
     overall_comment:{type:'string'},
     scores:{type:'array',items:{type:'object',properties:{
       name:{type:'string',enum:dimEnum}, score:{type:'integer'}, comment:{type:'string'}
-    },required:['name','score','comment']}},
+    },required:['name','score','comment'],additionalProperties:false}},
     good_point:{type:'string'}, blind_spot:{type:'string'},
-    other_perspectives:{type:'array',items:{type:'object',properties:{name:{type:'string'},hint:{type:'string'}},required:['name','hint']}},
+    other_perspectives:{type:'array',items:{type:'object',properties:{name:{type:'string'},hint:{type:'string'}},required:['name','hint'],additionalProperties:false}},
     model_answer:{type:'string'},
     follow_up_question:{type:'string'} },
-    required:['overall_score','overall_comment','scores','good_point','blind_spot','other_perspectives','model_answer','follow_up_question'] };
+    required:['overall_score','overall_comment','scores','good_point','blind_spot','other_perspectives','model_answer','follow_up_question'],
+    additionalProperties:false };
   const userText=(p.prior?p.prior+'\n':'')+`問題: ${p.question}\nジャンル: ${p.genre}\nユーザーの回答: ${p.answer}`;
-  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key);
-  const res=await fetch(url,{ method:'POST',
-    headers:{'Content-Type':'application/json'},
+  const res=await fetch('https://api.anthropic.com/v1/messages',{ method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    },
     body:JSON.stringify({
-      systemInstruction:{parts:[{text:sys}]},
-      contents:[{role:'user',parts:[{text:userText}]}],
-      generationConfig:{temperature:0.6,responseMimeType:'application/json',responseSchema:schema}
+      model:'claude-haiku-4-5',
+      max_tokens:2000,
+      system:sys,
+      messages:[{role:'user',content:userText}],
+      output_config:{format:{type:'json_schema',schema:schema}}
     })});
   if(!res.ok){
-    if(res.status===400||res.status===401||res.status===403) throw new Error('APIキーが無効か権限がありません。設定でキーを確認してください。');
-    if(res.status===429) throw new Error('無料枠のレート制限に達しました。少し待って再試行してください。');
-    throw new Error('Geminiの呼び出しに失敗しました ('+res.status+')。');
+    if(res.status===401||res.status===403) throw new Error('APIキーが無効か権限がありません。設定でキーを確認してください。');
+    if(res.status===429) throw new Error('レート制限に達しました。少し待って再試行してください。');
+    if(res.status===400){
+      let msg='';
+      try{ msg=(await res.json())?.error?.message||''; }catch{}
+      throw new Error('リクエストが拒否されました ('+res.status+')。'+(msg?'\n'+msg:'クレジット残高やキーをご確認ください。'));
+    }
+    throw new Error('Claudeの呼び出しに失敗しました ('+res.status+')。');
   }
   const data=await res.json();
-  const text=data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(data.stop_reason==='refusal') throw new Error('AIが回答を控えました。別の内容でお試しください。');
+  const text=(data?.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('');
   if(!text) throw new Error('応答が空でした。もう一度お試しください。');
-  return JSON.parse(text);
+  const clean=text.trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+  return JSON.parse(clean);
 }
 
 function renderHistory(){
   const h=getHist();
-  if(!h.length){ main.innerHTML=`<p class="empty">まだ回答がありません。<br>ホームから問題に挑戦してみましょう。</p>`; return; }
-  main.innerHTML=`<h2>思考履歴</h2><p class="sub">タップすると採点・フィードバックを全部見られます。</p>`+
+  if(!h.length){ main.innerHTML=`<div class="narrow"><p class="empty">まだ回答がありません。<br>ホームから問題に挑戦してみましょう。</p></div>`; return; }
+  const st=computeStats();
+  main.innerHTML=`<div class="narrow"><h2>思考履歴</h2><p class="sub">🔥 連続${st.streak}日　・　のべ${st.total}問　・　平均${st.avg||'—'}点</p><p class="sub" style="margin-bottom:10px">タップすると採点・フィードバックを全部見られます。</p>`+
     h.map(e=>`<div class="card histcard" onclick="go('histdetail',{histId:'${e.id}'})">
       ${e.kind==='followup'?'<span class="ftag">↳ 発展質問</span><br>':''}
       <span class="pill">${esc(e.genre)}・${new Date(e.at).toLocaleDateString('ja-JP')}・${esc(e.fb.overall_score)}/10</span>
       <div style="font-weight:600;margin:6px 0;line-height:1.4">${esc(e.question)}</div>
       <div class="sub">あなた: ${esc(e.answer)}</div>
-    </div>`).join('');
+    </div>`).join('')+`</div>`;
 }
 
 function renderHistoryDetail(){
   const e=getHist().find(x=>x.id===state.histId);
   if(!e){ go('history'); return; }
-  main.innerHTML=`
+  main.innerHTML=`<div class="narrow">
     <span class="backlink" onclick="go('history')">← 履歴に戻る</span>
     <div class="card"><div class="genre-label">${esc(e.genre)}・${new Date(e.at).toLocaleString('ja-JP')}</div>
       ${e.kind==='followup'?'<span class="ftag">↳ 発展質問への回答</span>':''}
@@ -394,23 +628,23 @@ function renderHistoryDetail(){
       <p class="sub" style="margin-top:8px">あなたの回答: ${esc(e.answer)}</p></div>
     ${feedbackHTML({genre:e.genre,question:e.question,answer:e.answer,fb:e.fb}, false)}
     <button class="btn ghost" onclick="go('history')">履歴に戻る</button>
-  `;
+  </div>`;
 }
 
 function renderSettings(){
   const has=!!getKey();
-  main.innerHTML=`
+  main.innerHTML=`<div class="narrow">
     <h2>設定</h2>
     <div class="card">
-      <p class="block-title"><span class="step">1</span>Gemini APIキーを取得（無料）</p>
-      <p class="sub">「自分専用のAIの鍵」を無料でもらう手順です。1〜2分で終わります。</p>
+      <p class="block-title"><span class="step">1</span>Claude APIキーを取得</p>
+      <p class="sub">「自分専用のAIの鍵」を作る手順です。数分で終わります。</p>
       <ol class="guide">
-        <li><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio のキー作成ページ</a>を開く</li>
-        <li>Googleアカウントでログイン（普段のGmailでOK）</li>
-        <li>青いボタン「<b>Create API key / APIキーを作成</b>」を押す</li>
-        <li>表示された文字列（<code>AIza…</code> または <code>AQ…</code> で始まる）を<b>コピー</b></li>
+        <li><a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Anthropic Console のAPIキー作成ページ</a>を開く</li>
+        <li>アカウントでログイン（初回はメールで登録）</li>
+        <li>「<b>Create Key</b>」を押してキーを作成</li>
+        <li>表示された文字列（<code>sk-ant-…</code> で始まる）を<b>コピー</b>（作成時しか表示されません）</li>
       </ol>
-      <p class="sub">クレジットカードは不要。Flash系モデルは無料枠で使えます。</p>
+      <p class="sub">⚠️ Anthropicには無料枠がありません。あらかじめ <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener">Billing</a> でクレジット（最低$5程度）の購入が必要です。使うモデルは Claude Haiku 4.5（低コスト）です。</p>
     </div>
     <div class="card">
       <p class="block-title"><span class="step">2</span>コピーしたキーを貼り付けて保存</p>
@@ -421,7 +655,7 @@ function renderSettings(){
       <p class="sub">キーはこのブラウザの中だけに保存され、外部のサーバーには一切送られません。スマホを変えたら再登録が必要です。</p>
     </div>
     <p class="sub center" style="margin-top:18px">Elifoq — Everyday Life Is Full Of Questions</p>
-  `;
+  </div>`;
 }
 function saveKeyUI(){ const v=document.getElementById('key').value.trim();
   const msg=document.getElementById('saved');
